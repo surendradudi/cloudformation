@@ -1,0 +1,246 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09T00:00:00.000Z",
+    "Parameters": {
+       "InstanceTypeParameter": {
+          "Type": "String",
+          "Default": "t2.micro",
+          "Description": "Enter instance size. Default is t2.micro."
+       },
+       "WorkstationIp": {
+          "Type": "String",
+          "Description": "The IP address of the workstation that can RDP into the instance."
+       },
+       "AMI": {
+          "Type": "String",
+          "Default": "ami-05912b6333beaa478",
+          "Description": "The Windows AMI to use."
+       },
+       "Key": {
+          "Type": "String",
+          "Description": "The key used to access the instance."
+       }
+    },
+    "Resources": {
+       "VPC": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+             "CidrBlock": "10.0.0.0/16",
+             "EnableDnsSupport": true,
+             "EnableDnsHostnames": true,
+             "InstanceTenancy": "default",
+             "Tags": [
+                {
+                   "Key": "Name",
+                   "Value": "Windows Target VPC"
+                }
+             ]
+          }
+       },
+       "InternetGateway": {
+          "Type": "AWS::EC2::InternetGateway"
+       },
+       "VPCGatewayAttachment": {
+          "Type": "AWS::EC2::VPCGatewayAttachment",
+          "Properties": {
+             "VpcId": null,
+             "InternetGatewayId": null
+          }
+       },
+       "SubnetA": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+             "AvailabilityZone": "us-east-1a",
+             "VpcId": null,
+             "CidrBlock": "10.0.0.0/24",
+             "MapPublicIpOnLaunch": true
+          }
+       },
+       "RouteTable": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+             "VpcId": null
+          }
+       },
+       "InternetRoute": {
+          "Type": "AWS::EC2::Route",
+          "DependsOn": "InternetGateway",
+          "Properties": {
+             "DestinationCidrBlock": "0.0.0.0/0",
+             "GatewayId": null,
+             "RouteTableId": null
+          }
+       },
+       "SubnetARouteTableAssociation": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+             "RouteTableId": null,
+             "SubnetId": null
+          }
+       },
+       "InstanceSecurityGroup": {
+          "Type": "AWS::EC2::SecurityGroup",
+          "Properties": {
+             "GroupName": "Octopus Target Group",
+             "GroupDescription": "Tentacle traffic in from hosted static ips, and RDP in from a personal workstation",
+             "VpcId": null,
+             "SecurityGroupIngress": [
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.245.156/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "52.147.25.42/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "52.147.31.180/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.244.132/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "52.147.25.94/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "52.147.25.173/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.245.171/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.245.7/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.244.147/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "10933",
+                   "ToPort": "10933",
+                   "CidrIp": "20.188.244.240/32"
+                },
+                {
+                   "IpProtocol": "tcp",
+                   "FromPort": "3389",
+                   "ToPort": "3389",
+                   "CidrIp": null
+                }
+             ],
+             "SecurityGroupEgress": [
+                {
+                   "IpProtocol": -1,
+                   "CidrIp": "0.0.0.0/0"
+                }
+             ]
+          }
+       },
+       "ElasticIP": {
+          "Type": "AWS::EC2::EIP",
+          "Properties": {
+             "Domain": "vpc",
+             "InstanceId": null
+          }
+       },
+       "Windows": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+             "ImageId": null,
+             "InstanceType": {
+                "Ref": "InstanceTypeParameter"
+             },
+             "KeyName": null,
+             "SubnetId": null,
+             "SecurityGroupIds": [
+                {
+                   "Ref": "InstanceSecurityGroup"
+                }
+             ],
+             "BlockDeviceMappings": [
+                {
+                   "DeviceName": "/dev/sda1",
+                   "Ebs": {
+                      "VolumeSize": 250
+                   }
+                }
+             ],
+             "UserData": {
+                "Fn::Base64": null
+             },
+             "Tags": [
+                {
+                   "Key": "Appplication",
+                   "Value": "Windows Server"
+                },
+                {
+                   "Key": "Domain",
+                   "Value": "None"
+                },
+                {
+                   "Key": "Environment",
+                   "Value": "Test"
+                },
+                {
+                   "Key": "LifeTime",
+                   "Value": "Transient"
+                },
+                {
+                   "Key": "Name",
+                   "Value": "Windows Server Worker"
+                },
+                {
+                   "Key": "OS",
+                   "Value": "Windows"
+                },
+                {
+                   "Key": "OwnerContact",
+                   "Value": "@surendra"
+                },
+                {
+                   "Key": "Purpose",
+                   "Value": "Surendra Test Worker"
+                },
+                {
+                   "Key": "Source",
+                   "Value": "CloudFormation Script in Octopus Deploy"
+                }
+             ]
+          }
+       }
+    },
+    "Outputs": {
+       "PublicIp": {
+          "Value": {
+             "Fn::GetAtt": [
+                "Windows",
+                "PublicIp"
+             ]
+          },
+          "Description": "Server's PublicIp Address"
+       }
+    }
+ }
