@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+          parameters{               
+            //  Choice On Picking The Branches 
+             choice(name: 'ENV', choices: ['dev'], description: 'Picking The Branch')         
+           }
+    
+    stages {
+        stage ('Deploy') {     // Deploying The Application Server
+            steps{
+                sh ''' 
+                  
+                 git remote set-url origin https://surendra.dudi:suri18989!@gitlab.com/surendra.dudi/https://gitlab.com/__deesh__/fastapi_notification_service.git
+                 git clone https://surendra.dudi:suri18989!@gitlab.com/surendra.dudi/git@gitlab.com:otocapital/core/oto_project.git
+                 pwd
+
+                 pip install pre-commit 
+                '''
+}
+
+            }
+        }
+}
