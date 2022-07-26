@@ -94,7 +94,7 @@
           { "Key": "Name", "Value": "cloudwords_public_routetable"}
         ]
       }
-    },   
+    },       
       "EC2Instance" : {
         "Type" : "AWS::EC2::Instance",
        "Properties" : {
