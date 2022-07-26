@@ -1,0 +1,116 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "AWS CloudFormation Sample Template",
+    "Parameters" : {
+      "KeyName": {
+        "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+        "Type": "AWS::EC2::KeyPair::KeyName",
+        "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+      },
+      "InstanceType": {
+        "Description": "EC2 instance type",
+        "Type": "String",
+        "Default": "t2.micro"
+      },
+      "ImageID": {
+        "Description": "EC2 instance type",
+        "Type": "String",
+        "Default": "ami-0cff7528ff583bf9a"
+      },
+      "SecurityGroupId" : {
+        "Type" : "String",
+        "Description" : "The SecurityGroupId of an existing EC2 SecurityGroup in your Virtual Private Cloud (VPC)",
+        "Default": "sg-0e1bd02784f0bbee7"
+      },
+      "SubnetID": {
+        "Description": "Subnets where logging EC2 instances can be deployed, must be in same VPC as selected above",
+        "Type": "String",
+        "ConstraintDescription": "must be valid subnet.",
+        "Default": "subnet-0e7a043fcfb2ada52"
+      }},
+    "Mappings" : {
+        "AWSInstanceMapping" : {
+          "t2.micro"    : { "Arch" : "64" },
+          "t2.small"    : { "Arch" : "64" },
+          "t2.medium"   : { "Arch" : "64" },
+          "t2.large"    : { "Arch" : "64" },
+          "m3.medium"   : { "Arch" : "64" },
+          "m4.large"   : { "Arch" : "64" },
+          "m4.xlarge"  : { "Arch" : "64" },
+          "m4.2xlarge"  : { "Arch" : "64" }
+        }
+    },  
+    "Resources" : {
+        "VPC" : {
+            "Type" : "AWS::EC2::VPC",
+            "Properties" : {
+              "CidrBlock" : "10.0.0.0/16",
+              "Tags" : [
+                {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
+                { "Key": "Name", "Value": "VPC_FOR_YOU"},
+                {"Key" : "Network", "Value" : "Public" }
+              ]
+            }
+          }, 
+          
+    "PublicSubnet" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : "10.0.0.0/24",
+        "Tags" : [
+          {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
+          {"Key" : "Network", "Value" : "Public" },
+          { "Key": "Name", "Value": "Project_Public_Subnet"}
+        ]
+      }
+    },
+
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
+          {"Key" : "Network", "Value" : "Public" },
+          { "Key": "Name", "Value": "Project_Internetgateway"}
+        ]
+      }
+    },
+
+    "AttachGateway" : {
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "Properties" : {
+         "VpcId" : { "Ref" : "VPC" },
+         "InternetGatewayId" : { "Ref" : "InternetGateway" }
+       }
+    },
+"PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : {"Ref" : "VPC"},
+        "Tags" : [
+          {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} },
+          {"Key" : "Network", "Value" : "Public" },
+          { "Key": "Name", "Value": "cloudwords_public_routetable"}
+        ]
+      }
+    },   
+      "EC2Instance" : {
+        "Type" : "AWS::EC2::Instance",
+       "Properties" : {
+          "InstanceType" : { "Ref" : "InstanceType" },
+          "SecurityGroupIds" : [{ "Ref" : "SecurityGroupId"}],
+          "KeyName" : { "Ref" : "KeyName" },
+          "ImageId" : { "Ref" : "ImageID" },
+          "InstanceInitiatedShutdownBehavior" : "stop",
+          "SubnetId" : { "Ref": "SubnetID" }
+        }
+      }
+      },
+    "Outputs" : {
+      "InstanceId" : {
+        "Description" : "InstanceId of the newly created EC2 instance",
+        "Value" : { "Ref" : "EC2Instance" }
+      }
+    }
+  }
