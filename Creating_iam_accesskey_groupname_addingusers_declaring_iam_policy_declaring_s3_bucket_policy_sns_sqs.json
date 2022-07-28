@@ -1,0 +1,156 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Import test",
+    "Resources": {
+        "Ec2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "SecurityGroups": [
+                    {
+                        "Ref": "InstanceSecurityGroup"
+                    }
+                ],
+                "KeyName": "Nenu_Petina_Key",
+                "ImageId": "ami-0cff7528ff583bf9a"
+            }
+        },
+        "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable SSH access via port 22",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 22,
+                        "ToPort": 22,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "ICreatedBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "AccessControl": "PublicRead"
+            }
+        },
+        "ServiceTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "TableName": "Service",
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "key",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "key",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 1
+                }
+            }
+        },
+        "GamesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+                "TableName": "Games",
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "key",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "key",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 1
+                }
+            }
+        }
+    },
+    "Metadata": {
+        "EC2Instance" : 
+            {"Description" : "Information about the instances"},
+        "IAM_USER" :
+           {
+            "Type" : "AWS::IAM::User",
+            "Properties" : {
+                "path" : "/",
+                "LoginProfile" : {
+                    "Password" : "hellohowareyou@!"
+                },
+                "policies" : {
+                    "policyName" : "This Is My policyName sqs",
+                    "policyDocument" : {
+                        "Version" : "2012-10-17",
+                        "Statement" : [ 
+                            {
+                            "Effect" : "Allow",
+                            "Action" : ["sqs:*"],
+                            "Resource" : [
+                                {
+                                "Fn::GetAtt" : ["IAmINQueue","Arn"]
+                            }
+                        ]
+                        },
+                        {
+                            "Effect" : "Deny",
+                            "Action" : ["sqs:*"],
+                            "NotResource" : [
+                                {
+                                    "Fn::GetAtt" : ["IAmINQueue","Arn"]
+                                }
+                            ]
+                        },
+                        {
+                            "policyName" : "This Is My policyName sns",
+                            "policyDocument" : {
+                                "Version" :"2012-10-17",
+                                "Statement" : [
+                                    {
+                                        "Effect" : "Allow",
+                                        "Action" : [
+                                            "sns:*"
+                                        ],
+                                        "Resource" : [
+                                            {
+                                                "Ref" : "TopicToMe"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Effect" : "Deny",
+                                        "Action" : [
+                                            "sns:*"
+                                        ],
+                                        "Resource" :[
+                                            {
+                                                "Ref" : "TopicToMe"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                    }
+                }
+            }
+           }    
+            
+
+    } 
+}
